@@ -1,6 +1,13 @@
 # We strongly recommend using the required_providers block to set the
 # AWS Provider source and version being used
 terraform {
+  # use Terraform Cloud
+  cloud {
+    organization = "tobiasdenzler"
+    workspaces {
+      name = "learn-terraform-aws"
+    }
+  }
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -25,4 +32,13 @@ provider "aws" {
 # Create a VPC
 resource "aws_vpc" "example" {
   cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_instance" "app_server" {
+  ami           = "ami-01cae1550c0adea9c"
+  instance_type = var.instance_type
+
+  tags = {
+    Name = var.instance_name
+  }
 }
