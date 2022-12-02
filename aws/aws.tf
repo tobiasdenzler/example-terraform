@@ -1,6 +1,7 @@
 # We strongly recommend using the required_providers block to set the
 # AWS Provider source and version being used
 terraform {
+  
   # use Terraform Cloud
   cloud {
     organization = "tobiasdenzler"
@@ -8,12 +9,20 @@ terraform {
       name = "learn-terraform-aws"
     }
   }
+
   required_providers {
+    random = {
+      source  = "hashicorp/random"
+      version = "3.0.0"
+    }
+
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 4.0"
+      version = ">= 2.0.0"
     }
   }
+
+  required_version = ">= 1.1"
 }
 
 # The default provider configuration; resources that begin with `aws_` will use
@@ -32,6 +41,23 @@ provider "aws" {
 # Create a VPC
 resource "aws_vpc" "example" {
   cidr_block = "10.0.0.0/16"
+
+  tags = var.resource_tags
+}
+
+resource "random_pet" "petname" {
+  length    = 5
+  separator = "-"
+}
+
+resource "aws_s3_bucket" "sample" {
+  bucket = random_pet.petname.id
+
+  acl    = "public-read"
+
+  tags = {
+    public_bucket = true
+  }
 }
 
 resource "aws_instance" "app_server" {
@@ -40,5 +66,6 @@ resource "aws_instance" "app_server" {
 
   tags = {
     Name = var.instance_name
+    accounting = "charge-${var.resource_tags["project"]}-${var.resource_tags["environment"]}"
   }
 }
