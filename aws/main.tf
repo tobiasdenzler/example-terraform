@@ -31,11 +31,27 @@ provider "aws" {
   region = "eu-west-1"
 }
 
-# Additional provider configuration for us-east region; resources can
-# reference this as `aws.useast`.
-provider "aws" {
-  alias  = "useast"
-  region = "us-east-1"
+data "aws_region" "current" { }
+
+# Existing AZs
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "zone-type"
+    values = ["availability-zone"]
+  }
+}
+
+# Lookup valid AMI
+data "aws_ami" "amazon_linux" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+  }
 }
 
 # Create a VPC
@@ -61,7 +77,7 @@ resource "aws_s3_bucket" "sample" {
 }
 
 resource "aws_instance" "app_server" {
-  ami           = "ami-01cae1550c0adea9c"
+  ami           = data.aws_ami.amazon_linux.id
   instance_type = var.instance_type
 
   tags = {
